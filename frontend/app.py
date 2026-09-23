@@ -1,3 +1,4 @@
+import os
 import time
 import gradio as gr
 
@@ -28,17 +29,11 @@ LANGUAGE_MAP = {
 
 
 def get_language_name(language):
-    return LANGUAGE_MAP.get(
-        language,
-        "python"
-    )
+    return LANGUAGE_MAP.get(language, "python")
 
 
 def get_editor_language(language):
-    return LANGUAGE_MAP.get(
-        language,
-        "python"
-    )
+    return LANGUAGE_MAP.get(language, "python")
 
 
 def update_editor_language(language):
@@ -52,18 +47,12 @@ def update_editor_language(language):
 # STATUS
 # ============================================================
 
-def make_status(
-    title,
-    message,
-    kind="loading"
-):
+def make_status(title, message, kind="loading"):
 
     if kind == "success":
         icon = "✅"
-
     elif kind == "error":
         icon = "❌"
-
     else:
         icon = "🔄"
 
@@ -84,20 +73,9 @@ def make_status(
 
 def context_markdown(context):
 
-    functions = context.get(
-        "functions",
-        []
-    )
-
-    variables = context.get(
-        "variables",
-        []
-    )
-
-    imports = context.get(
-        "imports",
-        []
-    )
+    functions = context.get("functions", [])
+    variables = context.get("variables", [])
+    imports = context.get("imports", [])
 
     function_text = "\n".join(
         "- `" + str(item["name"]) +
@@ -148,16 +126,9 @@ def prediction_markdown(prediction):
             "No prediction data available."
         )
 
-    predictions = prediction.get(
-        "predictions",
-        []
-    )
+    predictions = prediction.get("predictions", [])
 
-    if not prediction.get(
-        "success",
-        False
-    ) and not predictions:
-
+    if not prediction.get("success", False) and not predictions:
         return (
             "## 🔮 Error Prediction\n\n"
             "Static prediction could not be completed."
@@ -175,20 +146,9 @@ def prediction_markdown(prediction):
 
     for item in predictions:
 
-        error_type = item.get(
-            "type",
-            "Unknown"
-        )
-
-        line = item.get(
-            "line",
-            "Unknown"
-        )
-
-        message = item.get(
-            "message",
-            ""
-        )
+        error_type = item.get("type", "Unknown")
+        line = item.get("line", "Unknown")
+        message = item.get("message", "")
 
         prediction_rows.append(
             "| `"
@@ -237,25 +197,10 @@ def non_python_prediction(language):
 
 def error_markdown(runtime):
 
-    error_type = runtime.get(
-        "error_type",
-        "RuntimeError"
-    )
-
-    message = runtime.get(
-        "message",
-        ""
-    )
-
-    line = runtime.get(
-        "line",
-        "Unknown"
-    )
-
-    output = runtime.get(
-        "output",
-        ""
-    )
+    error_type = runtime.get("error_type", "RuntimeError")
+    message = runtime.get("message", "")
+    line = runtime.get("line", "Unknown")
+    output = runtime.get("output", "")
 
     if not output:
         output = "No output produced before failure."
@@ -284,15 +229,9 @@ def error_markdown(runtime):
 # SUCCESS OUTPUT
 # ============================================================
 
-def success_markdown(
-    runtime,
-    language
-):
+def success_markdown(runtime, language):
 
-    output = runtime.get(
-        "output",
-        ""
-    )
+    output = runtime.get("output", "")
 
     if not output:
         output = "No output produced."
@@ -316,10 +255,7 @@ def success_markdown(
 
 def root_markdown(root):
 
-    evidence = root.get(
-        "evidence",
-        []
-    )
+    evidence = root.get("evidence", [])
 
     evidence_text = "\n".join(
         "- " + str(item)
@@ -330,30 +266,15 @@ def root_markdown(root):
         evidence_text = "- No additional evidence available."
 
     confidence = (
-        float(
-            root.get(
-                "confidence",
-                0
-            )
-        ) * 100
+        float(root.get("confidence", 0)) * 100
     )
 
     return (
         "## 🎯 Root Cause\n\n"
         "### "
-        + str(
-            root.get(
-                "root_cause",
-                "Unknown"
-            )
-        )
+        + str(root.get("root_cause", "Unknown"))
         + "\n\n"
-        + str(
-            root.get(
-                "explanation",
-                ""
-            )
-        )
+        + str(root.get("explanation", ""))
         + "\n\n"
         "### Evidence\n\n"
         + evidence_text
@@ -370,14 +291,6 @@ def root_markdown(root):
 
 def verify_python_repair(code):
 
-    """
-    Uses the same multi-language execution engine used by
-    the main BugLens pipeline.
-
-    This keeps original execution and repair verification
-    consistent.
-    """
-
     return analyze_multilanguage_runtime(
         code=code,
         language="python"
@@ -388,18 +301,9 @@ def verify_python_repair(code):
 # MAIN ANALYSIS
 # ============================================================
 
-def analyze_bug(
-    code,
-    selected_language
-):
+def analyze_bug(code, selected_language):
 
-    language = get_language_name(
-        selected_language
-    )
-
-    # ========================================================
-    # EMPTY CODE
-    # ========================================================
+    language = get_language_name(selected_language)
 
     if not code or not code.strip():
 
@@ -419,10 +323,6 @@ def analyze_bug(
         )
 
         return
-
-    # ========================================================
-    # STEP 1
-    # ========================================================
 
     yield (
         "",
@@ -462,51 +362,28 @@ def analyze_bug(
             )
         )
 
-        syntax = analyze_syntax(
-            code
-        )
+        syntax = analyze_syntax(code)
 
-        if syntax.get(
-            "has_error"
-        ):
+        if syntax.get("has_error"):
 
-            prediction = predict_errors(
-                code
-            )
+            prediction = predict_errors(code)
 
             analysis = (
                 "## ⚠️ Syntax Error\n\n"
                 "| Property | Details |\n"
                 "|---|---|\n"
                 "| Error Type | `"
-                + str(
-                    syntax.get(
-                        "error_type",
-                        "SyntaxError"
-                    )
-                )
+                + str(syntax.get("error_type", "SyntaxError"))
                 + "` |\n"
                 "| Message | "
-                + str(
-                    syntax.get(
-                        "message",
-                        ""
-                    )
-                )
+                + str(syntax.get("message", ""))
                 + " |\n"
                 "| Line | `"
-                + str(
-                    syntax.get(
-                        "line",
-                        "Unknown"
-                    )
-                )
+                + str(syntax.get("line", "Unknown"))
                 + "` |"
             )
 
-            prediction_text = prediction_markdown(
-                prediction
-            )
+            prediction_text = prediction_markdown(prediction)
 
             yield (
                 analysis,
@@ -547,13 +424,8 @@ def analyze_bug(
 
     if language == "python":
 
-        context = analyze_code_context(
-            code
-        )
-
-        context_text = context_markdown(
-            context
-        )
+        context = analyze_code_context(code)
+        context_text = context_markdown(context)
 
     else:
 
@@ -593,13 +465,8 @@ def analyze_bug(
             )
         )
 
-        prediction = predict_errors(
-            code
-        )
-
-        prediction_text = prediction_markdown(
-            prediction
-        )
+        prediction = predict_errors(code)
+        prediction_text = prediction_markdown(prediction)
 
     else:
 
@@ -640,9 +507,7 @@ def analyze_bug(
     # SUCCESS
     # ========================================================
 
-    if not runtime.get(
-        "has_error"
-    ):
+    if not runtime.get("has_error"):
 
         yield (
             success_markdown(
@@ -694,15 +559,9 @@ def analyze_bug(
 
         root = analyze_root_cause(
             code=code,
-            error_type=runtime.get(
-                "error_type"
-            ),
-            error_message=runtime.get(
-                "message"
-            ),
-            error_line=runtime.get(
-                "line"
-            ),
+            error_type=runtime.get("error_type"),
+            error_message=runtime.get("message"),
+            error_line=runtime.get("line"),
             context=context
         )
 
@@ -716,25 +575,15 @@ def analyze_bug(
                 "message",
                 "The program could not execute successfully."
             ),
-            "error_line": runtime.get(
-                "line"
-            ),
+            "error_line": runtime.get("line"),
             "evidence": [
-                runtime.get(
-                    "message",
-                    ""
-                )
+                runtime.get("message", "")
             ],
             "confidence": 0.75
         }
 
-    analysis = error_markdown(
-        runtime
-    )
-
-    root_text = root_markdown(
-        root
-    )
+    analysis = error_markdown(runtime)
+    root_text = root_markdown(root)
 
     # ========================================================
     # GEMINI
@@ -759,20 +608,13 @@ def analyze_bug(
 
         ai_result = explain_error(
             code=code,
-            error_type=runtime.get(
-                "error_type"
-            ),
-            error_message=runtime.get(
-                "message"
-            ),
-            error_line=runtime.get(
-                "line"
-            ),
+            error_type=runtime.get("error_type"),
+            error_message=runtime.get("message"),
+            error_line=runtime.get("line"),
             context={
                 **context,
                 "language": selected_language
-            },
-            language=selected_language
+            }
         )
 
     except Exception as exc:
@@ -844,9 +686,7 @@ def analyze_bug(
         )
     )
 
-    corrected_code = extract_corrected_code(
-        ai_result
-    )
+    corrected_code = extract_corrected_code(ai_result)
 
     if not corrected_code:
 
@@ -895,22 +735,11 @@ def analyze_bug(
         )
     )
 
-    repaired = verify_python_repair(
-        corrected_code
-    )
+    repaired = verify_python_repair(corrected_code)
 
-    # ========================================================
-    # FIRST REPAIR PASSED
-    # ========================================================
+    if not repaired.get("has_error"):
 
-    if not repaired.get(
-        "has_error"
-    ):
-
-        repaired_output = repaired.get(
-            "output",
-            ""
-        )
+        repaired_output = repaired.get("output", "")
 
         if not repaired_output:
             repaired_output = "No output produced."
@@ -1033,8 +862,7 @@ def analyze_bug(
             error_message=first_failure_message,
             error_line=first_failure_line,
             previous_attempt=ai_result,
-            context=context,
-            language=selected_language
+            context=context
         )
 
         second_ai_text = second_result.get(
@@ -1055,10 +883,6 @@ def analyze_bug(
         )
 
         second_corrected_code = None
-
-    # ========================================================
-    # SECOND REPAIR EXTRACTION FAILED
-    # ========================================================
 
     if not second_corrected_code:
 
@@ -1124,13 +948,7 @@ def analyze_bug(
         second_corrected_code
     )
 
-    # ========================================================
-    # SECOND REPAIR PASSED
-    # ========================================================
-
-    if not second_repaired.get(
-        "has_error"
-    ):
+    if not second_repaired.get("has_error"):
 
         second_output = second_repaired.get(
             "output",
@@ -1599,13 +1417,9 @@ with gr.Blocks(
         )
     )
 
-    with gr.Row(
-        elem_classes=["dashboard-row"]
-    ):
+    with gr.Row(elem_classes=["dashboard-row"]):
 
-        with gr.Column(
-            scale=5
-        ):
+        with gr.Column(scale=5):
 
             gr.Markdown(
                 "## 💻 Source Code",
@@ -1650,48 +1464,32 @@ with gr.Blocks(
                 elem_classes=["output-card"]
             )
 
-        with gr.Column(
-            scale=7
-        ):
+        with gr.Column(scale=7):
 
             gr.Markdown(
                 "## 📊 Bug Analysis",
                 elem_classes=["section-heading"]
             )
 
-            with gr.Group(
-                elem_classes=["output-card"]
-            ):
+            with gr.Group(elem_classes=["output-card"]):
                 analysis_output = gr.Markdown()
 
-            with gr.Group(
-                elem_classes=["output-card"]
-            ):
+            with gr.Group(elem_classes=["output-card"]):
                 context_output = gr.Markdown()
 
-            with gr.Group(
-                elem_classes=["output-card"]
-            ):
+            with gr.Group(elem_classes=["output-card"]):
                 prediction_output = gr.Markdown()
 
-            with gr.Group(
-                elem_classes=["output-card"]
-            ):
+            with gr.Group(elem_classes=["output-card"]):
                 root_output = gr.Markdown()
 
-            with gr.Group(
-                elem_classes=["output-card"]
-            ):
+            with gr.Group(elem_classes=["output-card"]):
                 ai_output = gr.Markdown()
 
-            with gr.Group(
-                elem_classes=["output-card"]
-            ):
+            with gr.Group(elem_classes=["output-card"]):
                 verification_output = gr.Markdown()
 
-            with gr.Group(
-                elem_classes=["output-card"]
-            ):
+            with gr.Group(elem_classes=["output-card"]):
                 repair_output = gr.Markdown()
 
     # ========================================================
@@ -1767,4 +1565,10 @@ with gr.Blocks(
 
 if __name__ == "__main__":
 
-    demo.launch()
+    port = int(os.environ.get("PORT", "7860"))
+
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=port,
+        show_error=True
+    )
